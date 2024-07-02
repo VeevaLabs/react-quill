@@ -145,7 +145,7 @@ class ReactQuill extends React.Component<ReactQuillProps, ReactQuillState> {
   /*
   Reference to the element holding the Quill editing area.
   */
-  editingArea?: React.ReactInstance | null
+  editingAreaRef: React.RefObject<HTMLPreElement & HTMLDivElement>
 
   /*
   Tracks the internal value of the Quill editor
@@ -180,6 +180,7 @@ class ReactQuill extends React.Component<ReactQuillProps, ReactQuillState> {
     super(props);
     const value = this.isControlled()? props.value : props.defaultValue;
     this.value = value ?? '';
+    this.editingAreaRef = React.createRef();
   }
 
   validateProps(props: ReactQuillProps): void {
@@ -431,13 +432,10 @@ class ReactQuill extends React.Component<ReactQuillProps, ReactQuillState> {
   }
 
   getEditingArea(): HTMLElement {
-    if (!this.editingArea) {
+    if (!this.editingAreaRef.current) {
       throw new Error('Instantiating on missing editing area');
     }
-    const element = ReactDOM.findDOMNode(this.editingArea);
-    if (!element) {
-      throw new Error('Cannot find element for editing area');
-    }
+    const element = this.editingAreaRef.current
     if (element.nodeType === 3) {
       throw new Error('Editing area cannot be a text node');
     }
@@ -453,9 +451,7 @@ class ReactQuill extends React.Component<ReactQuillProps, ReactQuillState> {
 
     const properties = {
       key: generation,
-      ref: (instance: React.ReactInstance | null) => {
-        this.editingArea = instance
-      },
+      ref: this.editingAreaRef,
     };
 
     if (React.Children.count(children)) {
